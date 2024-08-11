@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rust Kit Builder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://i.postimg.cc/0N141qXb/SCRAP-FIGHT-POSTER.jpg');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        input, select {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 4px;
+            border: none;
+            font-size: 16px;
+        }
+
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px; /* Adjust this value to control the height */
+            overflow-y: auto; /* Adds scroll if the content is too long */
+            background-color: #333; /* Dark background */
+        }
+
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #333; /* Dark background */
+            border-bottom: 1px solid #d4d4d4;
+            color: white; /* White text color */
+        }
+
+        .autocomplete-items div:hover {
+            background-color: #555; /* Slightly lighter background on hover */
+        }
+
+        .button {
+            background-color: #FF4500;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .button:hover {
+            background-color: #FF6347;
+        }
+
+        #kitItems {
+            margin-top: 20px;
+            text-align: left;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        #kitItems ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #kitItems li {
+            padding: 10px;
+            background-color: #333;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        #links, #advertisement {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #advertisement img, .social-link img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .social-link {
+            display: inline-block;
+            margin: 5px;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Rust Kit Builder Tool</h1>
+
+    <div>
+        <input type="text" id="kitName" placeholder="Enter Kit Name">
+        <br>
+        <div style="position: relative;">
+            <input id="itemInput" type="text" placeholder="Type item name">
+            <div id="autocomplete-list" class="autocomplete-items"></div>
+        </div>
+        <br>
+        <input type="number" id="itemAmount" placeholder="Amount" min="1">
+        <br>
+        <input type="number" id="itemCondition" placeholder="Condition (1-100)" min="1" max="100">
+        <br>
+        <select id="itemContainer">
+            <option value="Main">Main</option>
+            <option value="Belt">Belt</option>
+            <option value="Wear">Wear</option>
+        </select>
+        <br>
+        <button class="button" onclick="addItemToKit()">Add Item to Kit</button>
+    </div>
+
+    <div id="kitItems">
+        <h2>Kit Items:</h2>
+        <ul id="kitList"></ul>
+    </div>
+
+    <button class="button" onclick="copyKitCommands()">Copy Kit Commands</button>
+
+ <div id="links">
+        <a href="https://discord.gg/scrap-fight" class="button">Join SCRAP-FIGHT!</a><br>
+        <a href="https://www.youtube.com/@SCRAPFIGHT" class="social-link"><img src="https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png" alt="YouTube" style="width:50px;"></a>
+        <a href="https://www.tiktok.com/@SCRAPFIGHT" class="social-link"><img src="https://i.postimg.cc/XNmyTpSd/tik-tok-icon.jpg" alt="TikTok" style="width:50px;"></a>
+        <a href="https://sites.google.com/view/scrap-fight/home" class="social-link"><img src="https://i.postimg.cc/R0JDjZTr/scrap-fight-icon.gif" alt="Website" style="width:50px;"></a>
+    </div>
+
+    <div id="advertisement">
+        <img src="https://i.postimg.cc/85SgvzpN/shopfront.gif" alt="Advertisement">
+    </div>
+
+    <script>
+    const items = [
+"ammo.shotgun","ammo.shotgun.fire","ammo.shotgun.slug","ammo.grenadelauncher.he",
+"ammo.grenadelauncher.buckshot","ammo.grenadelauncher.smoke","ammo.rifle",
+"ammo.rifle.explosive","ammo.handmade.shell","ammo.rocket.hv","ammo.rifle.hv",
+"ammo.pistol.hv","ammo.rifle.incendiary","ammo.pistol.fire","ammo.rocket.fire",
+"ammo.nailgun.nails","ammo.pistol","ammo.rocket.basic","submarine.torpedo.straight",
+"weapon.mod.burstmodule","weapon.mod.extendedmags","weapon.mod.holosight",
+"weapon.mod.muzzleboost","weapon.mod.muzzlebrake","weapon.mod.simplesight",
+"weapon.mod.silencer","weapon.mod.flashlight","weapon.mod.lasersight","rifle.ak",
+"grenade.beancan","rifle.bolt","bone.club","knife.bone","knife.combat",
+"bow.compound","crossbow","smg.2","shotgun.double","pistol.eoka","grenade.f1",
+"flamethrower","grenade.flashbang","hmlmg","bow.hunting","rifle.l96","longsword",
+"rifle.lr300","lmg.m249","rifle.m39","pistol.m92","mace","machete",
+"grenade.molotov","smg.mp5","multiplegrenadelauncher","pistol.nailgun","paddle",
+"pistol.prototype17","shotgun.pump","pistol.python","pistol.revolver",
+"rocket.launcher","salvaged.cleaver","salvaged.sword","pistol.semiauto",
+"rifle.semiauto","shotgun.spas12","speargun","spear.stone","smg.thompson",
+"shotgun.waterpipe","spear.wooden",
+"door.hinged.toptier","door.double.hinged.toptier","barricade.woodwire",
+"building.planner","wall.frame.fence","wall.frame.fence.gate","lock.code",
+"barricade.concrete","floor.grill","floor.triangle.grill","wall.frame.garagedoor",
+"gates.external.high.stone","gates.external.high.wood","wall.external.high.stone",
+"wall.external.high","lock.key","floor.ladder.hatch","water.catcher.large",
+"barricade.metal","shutter.metal.embrasure.a","wall.frame.shopfront.metal",
+"shutter.metal.embrasure.b","wall.window.bars.metal","wall.frame.netting",
+"wall.frame.cell.gate","wall.frame.cell","wall.window.bars.toptier",
+"barricade.sandbags","door.hinged.metal","door.double.hinged.metal",
+"wall.frame.shopfront","water.catcher.small","barricade.stone",
+"wall.window.glass.reinforced","cupboard.tool","floor.triangle.ladder.hatch",
+"watchtower.wood","door.double.hinged.wood","shutter.wood.a","barricade.wood",
+"barricade.wood.cover","door.hinged.wood","ladder.wooden.wall",
+"wall.window.bars.wood",
+"bbq","bed","botabag","campfire","chair","dropbox","fridge","furnace",
+"hitchtroughcombo","kayak","lantern","furnace.large","planter.large",
+"box.wooden.large","locker","mailbox","mixingtable","box.repair.bench",
+"research.table","rhib","rowboat","rug.bear","rug","shelves","skull_fire_pit",
+"sleepingbag","planter.small","small.oil.refinery","stash.small",
+"fireplace.stone","fishtrap.small","table","tunalight","vending.machine",
+"water.barrel","water.purifier","box.wooden","workbench1","workbench2",
+"workbench3",
+"fat.animal","bone.fragments","cctv.camera","charcoal","cloth","crude.oil",
+"diesel_barrel","can.beans.empty","can.tuna.empty","explosives","fertilizer",
+"gunpowder","metal.refined","hq.metal.ore","horsedung","skull.human",
+"leather","lowgradefuel","metal.fragments","metal.ore","plantfiber",
+"water.salt","scrap","stones","sulfur.ore","sulfur","targeting.computer",
+"water","skull.wolf","wood","mask.bandana","barrelcostume","hat.cap","hat.beenie","bone.armor.suit",
+"deer.skull.mask","hat.boonie","shoes.boots","bucket.helmet",
+"burlap.gloves.new","burlap.headwrap","burlap.shirt","burlap.shoes",
+"burlap.trousers","hat.candle","coffeecan.helmet","cratecostume",
+"diving.fins","diving.mask","diving.tank","boots.frog","hazmatsuit",
+"heavy.plate.helmet","heavy.plate.jacket","heavy.plate.pants",
+"attire.hide.boots","attire.hide.helterneck","attire.hide.pants",
+"attire.hide.poncho","attire.hide.skirt","attire.hide.vest","hoodie",
+"mask.balaclava","jacket","burlap.gloves","tshirt.long","lumberjack.hoodie",
+"metal.plate.torso","metal.facemask","hat.miner","nightvisiongoggles",
+"pants","partyhat","riot.helmet","roadsign.gloves","roadsign.jacket","roadsign.kilt","shirt.collared","pants.shorts","jacket.snow",
+"tactical.gloves","shirt.tanktop","tshirt","diving.wetsuit","hat.wolf","wood.armor.helmet","wood.armor.pants","wood.armor.jacket","horse.shoes.basic","horse.saddle.double","horse.shoes.advanced",
+"horse.saddle","horse.armor.roadsign","horse.saddlebag",
+"horse.saddle.single","horse.armor.wood","tool.binoculars","cakefiveyear","chainsaw","flare","flashlight.held",
+"hammer","fishingrod.handmade","hatchet","jackhammer","pickaxe",
+"rf.detonator","rock","axe.salvaged","hammer.salvaged","icepick.salvaged",
+"explosive.satchel","grenade.smoke","spraycan","stonehatchet",
+"stone.pickaxe","supply.signal","explosive.timed","torch","bucket.water","antiradpills","bandage","largemedkit","syringe.medical",
+"radiationresisttea.advanced","healingtea.advanced","maxhealthtea.advanced",
+"oretea.advanced","radiationremovetea.advanced","scraptea.advanced",
+"woodtea.advanced","radiationresisttea","healingtea","maxhealthtea",
+"oretea","scraptea","woodtea","radiationresisttea.pure","healingtea.pure",
+"maxhealthtea.pure","oretea.pure","radiationremovetea.pure",
+"scraptea.pure","woodtea.pure","radiationremovetea","fish.anchovy","apple","black.raspberries","blueberries",
+"blue.berry","clone.blue.berry","seed.blue.berry","bearmeat.burned",
+"chicken.burned","deermeat.burned","horsemeat.burned",
+"humanmeat.burned","meat.pork.burned","wolfmeat.burned","cactusflesh",
+"can.beans","can.tuna","fish.catfish","chocolate","bearmeat.cooked",
+"chicken.cooked","deermeat.cooked","fish.cooked","horsemeat.cooked",
+"humanmeat.cooked","meat.pork.cooked","wolfmeat.cooked","corn",
+"clone.corn","seed.corn","granolabar","green.berry","clone.green.berry",
+"seed.green.berry","grub","clone.hemp","seed.hemp","fish.herring",
+"fish.minnows","mushroom","fish.orangeroughy","jar.pickle",
+"potato","clone.potato","seed.potato","pumpkin","clone.pumpkin",
+"seed.pumpkin","bearmeat","chicken.raw","deermeat.raw","fish.raw",
+"horsemeat.raw","humanmeat.raw","meat.boar","wolfmeat.raw",
+"red.berry","clone.red.berry","seed.red.berry","fish.salmon",
+"fish.sardine","fish.smallshark","fish.troutsmall",
+"smallwaterbottle","waterjug","white.berry","clone.white.berry",
+"seed.white.berry","worm","yellow.berry","clone.yellow.berry",
+"seed.yellow.berry","fish.yellowperch","flameturret","trap.landmine","guntrap","trap.bear",
+"spikes.floor","keycard_blue","door.key","keycard_green",
+"fun.guitar","note","keycard_red","fuse","propanetank","gears","metalblade","metalpipe",
+"metalspring","riflebody","roadsigns","rope","semibody",
+"sewingkit","sheetmetal","smgbody","tarp","techparts","electric.andswitch","electric.audioalarm","autoturret",
+"electric.blocker","electric.button","ceilinglight",
+"computerstation","electric.counter","electric.doorcontroller",
+"electrical.branch","electric.heater","elevator",
+"electric.flasherlight","fluid.combiner","fluid.splitter",
+"fluid.switch","electric.hbhfsensor","hosetool","electric.igniter","electric.battery.rechargable.large",
+"electric.solarpanel.large","electric.laserdetector",
+"electric.battery.rechargable.medium","electrical.memorycell",
+"electric.orswitch","powered.water.purifier",
+"electric.pressurepad","electric.random.switch",
+"target.reactive","electric.rf.broadcaster","rf_pager",
+"electric.rf.receiver","electrical.combiner","searchlight",
+"electric.sirenlight","electric.battery.rechargable.small",
+"electric.fuelgenerator.small","electric.splitter",
+"electric.sprinkler","storage.monitor","electric.switch",
+"electric.teslacoil","electric.generator.small",
+"electric.timer","waterpump","generator.wind.scrap",
+"wiretool","electric.xorswitch"
+];
+
+    
+   function autocomplete(input, arr) {
+        let currentFocus;
+        input.addEventListener("input", function() {
+            let a, b, i, val = this.value;
+            closeAllLists();
+            if (!val) return false;
+            currentFocus = -1;
+            a = document.createElement("DIV");
+            a.setAttribute("id", this.id + "autocomplete-list");
+            a.setAttribute("class", "autocomplete-items");
+            this.parentNode.appendChild(a);
+            for (i = 0; i < arr.length; i++) {
+                if (arr[i].substr(0, val.length).toUpperCase() === val.toUpperCase()) {
+                    b = document.createElement("DIV");
+                    b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+                    b.innerHTML += arr[i].substr(val.length);
+                    b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+                    b.addEventListener("click", function() {
+                        input.value = this.getElementsByTagName("input")[0].value;
+                        closeAllLists();
+                    });
+                    a.appendChild(b);
+                }
+            }
+        });
+        input.addEventListener("keydown", function(e) {
+            let x = document.getElementById(this.id + "autocomplete-list");
+            if (x) x = x.getElementsByTagName("div");
+            if (e.keyCode === 40) {
+                currentFocus++;
+                addActive(x);
+            } else if (e.keyCode === 38) {
+                currentFocus--;
+                addActive(x);
+            } else if (e.keyCode === 13) {
+                e.preventDefault();
+                if (currentFocus > -1) {
+                    if (x) x[currentFocus].click();
+                }
+            }
+        });
+
+        function addActive(x) {
+            if (!x) return false;
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = (x.length - 1);
+            x[currentFocus].classList.add("autocomplete-active");
+        }
+
+        function removeActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("autocomplete-active");
+            }
+        }
+
+        function closeAllLists(elmnt) {
+            const x = document.getElementsByClassName("autocomplete-items");
+            for (let i = 0; i < x.length; i++) {
+                if (elmnt !== x[i] && elmnt !== input) {
+                    x[i].parentNode.removeChild(x[i]);
+                }
+            }
+        }
+
+        document.addEventListener("click", function(e) {
+            closeAllLists(e.target);
+        });
+    }
+
+    let kitItems = [];
+
+    function addItemToKit() {
+    const kitName = document.getElementById('kitName').value.trim();
+    const itemName = document.getElementById('itemInput').value;
+    const itemAmount = document.getElementById('itemAmount').value;
+    const itemCondition = document.getElementById('itemCondition').value;
+    const itemContainer = document.getElementById('itemContainer').value;
+
+    if (kitName && itemName && itemAmount) {
+        let kitCommand = `kit add "${kitName}" "${itemName}" "${itemAmount}" "${itemCondition}" "${itemContainer}"`;
+
+        // Create the list item with a delete button and a minus button
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `${kitCommand} <button onclick="removeCondition(this)">- Condition</button> <button onclick="removeCommand(this)">Delete</button>`;
+        
+        kitItems.push(kitCommand);
+        document.getElementById('kitList').appendChild(listItem);
+    } else {
+        alert('Please fill out all fields.');
+    }
+}
+
+function removeCommand(element) {
+    const listItem = element.parentNode;
+    const index = Array.from(listItem.parentNode.children).indexOf(listItem);
+    kitItems.splice(index, 1); // Remove the item from the kitItems array
+    listItem.remove(); // Remove the list item from the UI
+}
+
+function removeCondition(element) {
+    const listItem = element.parentNode;
+    const index = Array.from(listItem.parentNode.children).indexOf(listItem);
+    let command = kitItems[index];
+
+    // Remove the condition part of the command
+    command = command.replace(/"\d{1,3}" /, ''); // Removes the condition number
+
+    kitItems[index] = command; // Update the array
+    listItem.firstChild.textContent = command; // Update the displayed text
+}
+
+    function copyKitCommands() {
+        if (kitItems.length > 0) {
+            const commands = kitItems.join('\n');
+            navigator.clipboard.writeText(commands).then(() => {
+                alert('Kit commands copied to clipboard successfully!');
+            }).catch(err => {
+                console.error("Failed to copy: ", err);
+            });
+        } else {
+            alert('No items in the kit. Please add some items.');
+        }
+    }
+
+    // Initialize autocomplete for item input
+    autocomplete(document.getElementById("itemInput"), items);
+
+</script>
+
+</body>
+</html>
+
